@@ -1,6 +1,7 @@
 require 'net/http'
 require 'uri'
 require 'set'
+require 'base64'
 
 # Usage:
 #
@@ -94,7 +95,7 @@ class HttpLogger
     if self.class.log_request_body
       if HTTP_METHODS_WITH_BODY.include?(request.method)
         if (body = request.body) && !body.empty?
-          log("Request body", truncate_body(body))
+          log("Request body", sanitize_body(truncate_body(body)))
         end
       end
     end
@@ -116,7 +117,7 @@ class HttpLogger
         log("Response body", "<impossible to log>")
       else
         if body && !body.empty?
-          log("Response body", truncate_body(body))
+          log("Response body", sanitize_body(truncate_body(body)))
         end
       end
     end
@@ -157,6 +158,13 @@ class HttpLogger
     else
       body
     end
+  end
+
+  # If we have an ASCII-8BIT body it usually means that the body is binary. It is not safe to log
+  # this and attempting to do so will also result in an error similar to the following:
+  # "log writing failed. "\x8B" from ASCII-8BIT to UTF-8"
+  def sanitize_body(body)
+    body.encoding.name == 'ASCII-8BIT' ? Base64.encode64(body).force_encoding('UTF-8') : body
   end
 
   def log(message, dump)
