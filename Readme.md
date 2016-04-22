@@ -23,6 +23,7 @@ require 'http_logger'
 HttpLogger.logger = Logger.new(...) # defaults to Rails.logger if Rails is defined
 HttpLogger.colorize = true # Default: true
 HttpLogger.ignore = [/newrelic\.com/]
+HttpLogger.only = [/github\.com/]
 HttpLogger.log_headers = false  # Default: false
 HttpLogger.log_request_body  = false  # Default: true
 HttpLogger.log_response_body = false  # Default: true

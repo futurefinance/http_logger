@@ -30,6 +30,7 @@ class HttpLogger
     attr_accessor :logger
     attr_accessor :colorize
     attr_accessor :ignore
+    attr_accessor :only
     attr_accessor :level
   end
 
@@ -39,6 +40,7 @@ class HttpLogger
   self.colorize = true
   self.collapse_body_limit = 5000
   self.ignore = []
+  self.only = []
   self.level = :debug
 
   def self.perform(*args, &block)
@@ -87,7 +89,7 @@ class HttpLogger
   end
 
   HTTP_METHODS_WITH_BODY = Set.new(%w(POST PUT GET PATCH))
-  
+
   def log_request_body(request)
     if self.class.log_request_body
       if HTTP_METHODS_WITH_BODY.include?(request.method)
@@ -121,11 +123,19 @@ class HttpLogger
   end
 
   def require_logging?(http, request)
-    self.logger && !ignored?(http, request) && (http.started? || fakeweb?(http, request))
+    self.logger && approved?(http, request) && (http.started? || fakeweb?(http, request))
   end
 
-  def ignored?(http, request)
+  def approved?(http, request)
     url = request_url(http, request)
+    return false if ignored?(url)
+    return true if self.class.only.empty?
+    self.class.only.any? do |pattern|
+      url =~ pattern
+    end
+  end
+
+  def ignored?(url)
     self.class.ignore.any? do |pattern|
       url =~ pattern
     end
@@ -141,8 +151,8 @@ class HttpLogger
   def truncate_body(body)
     if collapse_body_limit && collapse_body_limit > 0 && body && body.size >= collapse_body_limit
       body_piece_size = collapse_body_limit / 2
-      body[0..body_piece_size] + 
-        "\n\n<some data truncated>\n\n" + 
+      body[0..body_piece_size] +
+        "\n\n<some data truncated>\n\n" +
         body[(body.size - body_piece_size)..body.size]
     else
       body
@@ -195,7 +205,7 @@ class Net::HTTP
 
   def request(request, body = nil, &block)
     HttpLogger.perform(self, request, body) do
-      request_without_logging(request, body, &block) 
+      request_without_logging(request, body, &block)
     end
   end
 
