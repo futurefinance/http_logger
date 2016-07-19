@@ -182,8 +182,8 @@ class HttpLogger
 
   def format_log_entry(message = nil, dump = nil)
     if self.class.colorize
-      message_color, dump_color = "4;32;1", "0;1"
-      log_entry = "  \e[#{message_color}m#{message}\e[0m   "
+      message_color, dump_color = "0;32;1", "0;1"
+      log_entry = "  \e[#{message_color}m#{message}\e[0m   " if message
       log_entry << "\e[#{dump_color}m%#{String === dump ? 's' : 'p'}\e[0m" % dump if dump
       log_entry
     else
