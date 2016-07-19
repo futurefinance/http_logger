@@ -91,7 +91,8 @@ class HttpLogger
 
   def log_request_headers(request)
     if self.class.log_request_headers
-      request.each_capitalized { |k,v| log("HTTP request header", "#{k}: #{v}") }
+      log("HTTP request headers")
+      request.each_capitalized { |k,v| log("  ", "#{k}: #{v}") }
     end
   end
 
@@ -114,7 +115,8 @@ class HttpLogger
   def log_response_headers(response)
     if self.class.log_response_headers
       log
-      response.each_capitalized { |k,v| log("HTTP response header", "#{k}: #{v}") }
+      log("HTTP response headers")
+      response.each_capitalized { |k,v| log("  ", "#{k}: #{v}") }
     end
   end
 
