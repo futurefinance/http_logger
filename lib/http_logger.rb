@@ -10,7 +10,7 @@ require 'base64'
 # == Setup logger
 #
 #    HttpLogger.logger = Logger.new('/tmp/all.log')
-#    HttpLogger.log_headers = true
+#    HttpLogger.log_request_headers = true
 #
 # == Do request
 #
@@ -25,7 +25,8 @@ require 'base64'
 class HttpLogger
   class << self
     attr_accessor :collapse_body_limit
-    attr_accessor :log_headers
+    attr_accessor :log_request_headers
+    attr_accessor :log_response_headers
     attr_accessor :log_request_body
     attr_accessor :log_response_body
     attr_accessor :logger
@@ -35,7 +36,8 @@ class HttpLogger
     attr_accessor :level
   end
 
-  self.log_headers = false
+  self.log_request_headers = false
+  self.log_response_headers = false
   self.log_request_body = true
   self.log_response_body = true
   self.colorize = true
@@ -84,7 +86,7 @@ class HttpLogger
   end
 
   def log_request_headers(request)
-    if self.class.log_headers
+    if self.class.log_request_headers
       request.each_capitalized { |k,v| log("HTTP request header", "#{k}: #{v}") }
     end
   end
@@ -106,7 +108,7 @@ class HttpLogger
   end
 
   def log_response_headers(response)
-    if self.class.log_headers
+    if self.class.log_response_headers
       response.each_capitalized { |k,v| log("HTTP response header", "#{k}: #{v}") }
     end
   end
@@ -193,9 +195,14 @@ end
 
 class Net::HTTP
 
-  def self.log_headers=(value)
-    HttpLogger.deprecate_config("log_headers")
-    HttpLogger.log_headers = value
+  def self.log_request_headers=(value)
+    HttpLogger.deprecate_config("log_request_headers")
+    HttpLogger.log_request_headers = value
+  end
+
+  def self.log_response_headers=(value)
+    HttpLogger.deprecate_config("log_response_headers")
+    HttpLogger.log_response_headers = value
   end
 
   def self.colorize=(value)
@@ -207,7 +214,6 @@ class Net::HTTP
     HttpLogger.deprecate_config("logger")
     HttpLogger.logger = value
   end
-
 
   alias_method :request_without_logging,  :request
 
