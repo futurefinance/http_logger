@@ -63,14 +63,18 @@ class HttpLogger
     response = yield
   ensure
     if require_logging?(http, request)
+      log
       log_request_url(http, request, start_time)
       log_request_body(request)
+      log
       log_request_headers(request)
       if defined?(response) && response
+        log
         log_response_code(response)
         log_response_headers(response)
         log_response_body(response.body)
       end
+      log
     end
   end
 
@@ -109,6 +113,7 @@ class HttpLogger
 
   def log_response_headers(response)
     if self.class.log_response_headers
+      log
       response.each_capitalized { |k,v| log("HTTP response header", "#{k}: #{v}") }
     end
   end
@@ -116,9 +121,11 @@ class HttpLogger
   def log_response_body(body)
     if self.class.log_response_body
       if body.is_a?(Net::ReadAdapter)
+        log
         log("Response body", "<impossible to log>")
       else
         if body && !body.empty?
+          log
           log("Response body", sanitize_body(truncate_body(body)))
         end
       end
@@ -169,11 +176,11 @@ class HttpLogger
     body.encoding.name == 'ASCII-8BIT' ? Base64.encode64(body).force_encoding('UTF-8') : body
   end
 
-  def log(message, dump)
+  def log(message = nil, dump = nil)
     self.logger.send(self.class.level, format_log_entry(message, dump))
   end
 
-  def format_log_entry(message, dump = nil)
+  def format_log_entry(message = nil, dump = nil)
     if self.class.colorize
       message_color, dump_color = "4;32;1", "0;1"
       log_entry = "  \e[#{message_color}m#{message}\e[0m   "
