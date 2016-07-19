@@ -220,13 +220,7 @@ class Net::HTTP
 end
 
 if defined?(Rails)
-
-  if !Rails.respond_to?(:application) || (Rails.application && Rails.application.config)
-    # Rails2
-    Rails.configuration.after_initialize do
-      HttpLogger.logger = Rails.logger unless HttpLogger.logger
-    end
-  elsif defined?(ActiveSupport) && ActiveSupport.respond_to?(:on_load)
+  if defined?(ActiveSupport) && ActiveSupport.respond_to?(:on_load)
     # Rails3
     ActiveSupport.on_load(:after_initialize) do
       HttpLogger.logger = Rails.logger unless HttpLogger.logger
